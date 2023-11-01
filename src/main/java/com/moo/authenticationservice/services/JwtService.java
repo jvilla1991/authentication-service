@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,8 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "39792442264528482B4D6251655468576D5A7134743777217A25432A462D4A40"; // 256 Bit Security Key, should be moved to application properties
+    @Value("${DECODER_KEY}")
+    private static String DECODER_KEY; // TODO: 256 Bit Security Key, should be moved to application properties
 
     public boolean isTokenValid(String jwtToken, UserDetails userDetails) {
         final String userName = extractUserName(jwtToken);
@@ -67,7 +69,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(DECODER_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

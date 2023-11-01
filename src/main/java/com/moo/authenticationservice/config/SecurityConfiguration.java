@@ -17,13 +17,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-// On application startup, Spring Security will try to look for a bean of type "Security filter chain"
-    //This chain is responsible or configuring all the HTTP Security of our application
+    // On application startup, Spring Security will try to look for a bean of type "Security filter chain"
+    // This chain is responsible for configuring all the HTTP Security of our application
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf().disable()
-                // Whitelist means we have some endpoints that dont require any authentication or tokens to access
+                // Whitelist means we have some endpoints that don;t require any authentication or tokens to access
                 .authorizeHttpRequests()
                 .requestMatchers("/api/v1/auth/**") // Insert endpoints here for whitelisting,
                 .permitAll()
