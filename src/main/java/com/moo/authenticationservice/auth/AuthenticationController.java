@@ -6,6 +6,7 @@ import com.moo.authenticationservice.models.RegisterRequest;
 import com.moo.authenticationservice.services.AuthenticationService;
 import com.moo.authenticationservice.services.UserService;
 import com.moo.authenticationservice.user.User;
+import com.moo.authenticationservice.user.UserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +31,8 @@ public class AuthenticationController {
     }
 
     @GetMapping("/authorize")
-    public ResponseEntity<User> authorize(@RequestHeader("Authorization") String authorizationHeader) {
-        User user = userService.authorizeAndReturnUserDetails(authorizationHeader).get();
+    public ResponseEntity<UserDTO> authorize(@RequestHeader("Authorization") String authorizationHeader) {
+        UserDTO user = userService.authorizeAndReturnUserDetails(authorizationHeader).get();
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
