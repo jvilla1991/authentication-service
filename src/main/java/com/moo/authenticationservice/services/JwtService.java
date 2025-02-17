@@ -20,7 +20,7 @@ import java.util.function.Function;
 public class JwtService {
 
     @Value("${DECODER_KEY}")
-    private static String DECODER_KEY; // TODO: 256 Bit Security Key, should be moved to application properties
+    private String DECODER_KEY;
 
     public boolean isTokenValid(String jwtToken, UserDetails userDetails) {
         final String userName = extractUserName(jwtToken);

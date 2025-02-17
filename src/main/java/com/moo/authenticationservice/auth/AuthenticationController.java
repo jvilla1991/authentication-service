@@ -5,10 +5,8 @@ import com.moo.authenticationservice.models.AuthenticationResponse;
 import com.moo.authenticationservice.models.RegisterRequest;
 import com.moo.authenticationservice.services.AuthenticationService;
 import com.moo.authenticationservice.services.UserService;
-import com.moo.authenticationservice.user.User;
 import com.moo.authenticationservice.user.UserDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +23,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.register(request));
     }
 
+    @CrossOrigin
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
@@ -32,8 +31,10 @@ public class AuthenticationController {
 
     @GetMapping("/authorize")
     public ResponseEntity<UserDTO> authorize(@RequestHeader("Authorization") String authorizationHeader) {
-        UserDTO user = userService.authorizeAndReturnUserDetails(authorizationHeader).get();
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        UserDTO user = userService.authorizeAndReturnUserDetails(authorizationHeader)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(user);
     }
 
 }

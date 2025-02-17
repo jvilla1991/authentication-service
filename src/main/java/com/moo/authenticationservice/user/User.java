@@ -1,5 +1,6 @@
 package com.moo.authenticationservice.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,11 +24,13 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @JsonIgnore
     private UUID uuid;
     private String userName;
     private String firstName;
     private String lastName;
     private String email;
+    @JsonIgnore
     private String password;
     @Enumerated(EnumType.STRING) // Tells Spring that this is an Enum, and that we want to use it as a String, as opposed to an ordinal which will be "0, 1, 2, etc..."
     private Role role;
@@ -35,10 +38,6 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
-    }
-
-    public UUID getUuid() {
-        return uuid;
     }
 
     @Override
