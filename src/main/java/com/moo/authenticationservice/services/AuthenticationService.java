@@ -1,6 +1,5 @@
 package com.moo.authenticationservice.services;
 
-import com.moo.authenticationservice.exceptions.ApiException;
 import com.moo.authenticationservice.exceptions.ApiRequestException;
 import com.moo.authenticationservice.models.AuthenticationRequest;
 import com.moo.authenticationservice.models.AuthenticationResponse;
@@ -57,6 +56,7 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .success(true)
                 .build();
     }
 }
