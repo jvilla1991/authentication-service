@@ -1,4 +1,4 @@
-package com.moo.authenticationservice.auth;
+package com.moo.authenticationservice.controllers;
 
 import com.moo.authenticationservice.models.AuthenticationRequest;
 import com.moo.authenticationservice.models.AuthenticationResponse;
