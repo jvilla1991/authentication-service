@@ -1,6 +1,7 @@
 package com.moo.authenticationservice.config;
 
 import com.moo.authenticationservice.services.JwtService;
+import io.jsonwebtoken.JwtException;
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,10 +15,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
 
-@Component // Can also be "@repository" or "@service" as they all extend "@Component," but this is more generic
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -26,34 +28,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request, // Our HTTP Request
-            @NonNull HttpServletResponse response, // Our Response, allows us to intercept every request and provide new data within the response (e.g. we can provide a new header in the response)
-            @NonNull FilterChain filterChain) // TODO: Chain of Responsibility Design Pattern, contains list of filters that we need to execute
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
             throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization"); // Contains JWT, also known as the "Bearer" Token
-        final String jwt;
-        final String userName;
+
+        final String authHeader = request.getHeader("Authorization");
+
+        // No token present — pass through; endpoint security rules decide access
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // Goes to the next filter if the conditional resolves to "false"
+            filterChain.doFilter(request, response);
             return;
         }
-        jwt = authHeader.substring(7);
-        userName = jwtService.extractUserName(jwt);
-        if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
-            if (jwtService.isTokenValid(jwt, userDetails)) { // If the User is valid, we need to update the security context and then send the request to the dispatcher servlet
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null, // Here we don't have credentials when we created the user
-                        userDetails.getAuthorities());
 
-                authenticationToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        final String jwt = authHeader.substring(7);
+
+        try {
+            final String userName = jwtService.extractUserName(jwt);
+            if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
-            filterChain.doFilter(request, response);
-            // At this point, JwtAuthFilter Validation and User Details service is all implemented.Now we need to bind them together. Spring Boot 3 Amigoscode Video @ 1:26
+        } catch (JwtException | IllegalArgumentException e) {
+            // Malformed, expired, or tampered token.
+            // Clear any partial auth state and let the request continue —
+            // the endpoint's permitAll/authenticated rules will reject if needed.
+            SecurityContextHolder.clearContext();
         }
+
+        // Always continue the chain — never swallow the request here
+        filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return new AntPathMatcher().match("/api/v1/auth/**", request.getServletPath());
     }
 }

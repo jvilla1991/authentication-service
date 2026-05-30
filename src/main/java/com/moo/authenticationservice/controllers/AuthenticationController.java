@@ -1,4 +1,4 @@
-package com.moo.authenticationservice.auth;
+package com.moo.authenticationservice.controllers;
 
 import com.moo.authenticationservice.models.AuthenticationRequest;
 import com.moo.authenticationservice.models.AuthenticationResponse;
@@ -23,7 +23,6 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.register(request));
     }
 
-    @CrossOrigin
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
