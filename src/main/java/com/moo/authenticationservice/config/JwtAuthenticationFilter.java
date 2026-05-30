@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
 
@@ -65,5 +66,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Always continue the chain — never swallow the request here
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return new AntPathMatcher().match("/api/v1/auth/**", request.getServletPath());
     }
 }
