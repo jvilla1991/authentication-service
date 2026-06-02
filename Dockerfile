@@ -1,11 +1,24 @@
-# Use a lightweight base image with Java
-FROM openjdk:17-jdk-slim
+# ── Build stage ────────────────────────────────────────────────────────────────
+# Downloads dependencies first (cached as long as pom.xml is unchanged),
+# then compiles and packages. Tests are skipped here — run them in CI before build.
 
-# Set the working directory
+FROM eclipse-temurin:17-jdk AS build
+WORKDIR /workspace
+
+COPY mvnw mvnw.cmd pom.xml ./
+COPY .mvn .mvn/
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -B -q
+
+COPY src src/
+RUN ./mvnw package -B -q -DskipTests
+
+# ── Runtime stage ───────────────────────────────────────────────────────────────
+# Minimal JRE image — no JDK, no build tools, no source code.
+
+FROM eclipse-temurin:17-jre-alpine AS runtime
 WORKDIR /app
 
-# Copy your jar into the image
-COPY target/*.jar app.jar
+COPY --from=build /workspace/target/*.jar app.jar
 
-# Run the application
+EXPOSE 8085
 ENTRYPOINT ["java", "-jar", "app.jar"]
