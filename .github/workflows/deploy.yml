@@ -34,8 +34,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       # ── Build & push ──────────────────────────────────────────────────────────
-      # The Dockerfile is multi-stage: Maven build inside Docker, slim JRE runtime.
-      # No host-side Java setup needed.
+      # Multi-stage Dockerfile: Maven build inside Docker, slim JRE runtime.
+      # Tag with both :latest (for Terraform initial provisioning reference) and
+      # :<sha> (deployed by this workflow for immutable, auditable releases).
 
       - name: Build & push Docker image
         env:
@@ -49,7 +50,8 @@ jobs:
           docker push "$IMAGE_URI:${{ github.sha }}"
 
       # ── Deploy to App Runner ──────────────────────────────────────────────────
-      # auto_deployments_enabled = false in Terraform, so we trigger manually.
+      # auto_deployments_enabled = false in Terraform; update-service triggers a
+      # new deployment with the exact SHA-tagged image that was just pushed.
 
       - name: Deploy to App Runner
         run: |
@@ -76,7 +78,7 @@ jobs:
             echo "  [$i/30] Status: $STATUS"
             if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment complete."
-              break
+              exit 0
             fi
             if [ "$STATUS" = "CREATE_FAILED" ] || \
                [ "$STATUS" = "UPDATE_FAILED" ] || \
@@ -86,6 +88,8 @@ jobs:
             fi
             sleep 20
           done
+          echo "Timed out after 10 minutes waiting for deployment."
+          exit 1
 
       # ── Smoke test ────────────────────────────────────────────────────────────
 
