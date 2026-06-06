@@ -1,6 +1,7 @@
 package com.moo.authenticationservice.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -26,6 +28,11 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
+
+    // Comma-separated allowed SPA origins. Supplied in prod via the CORS_ALLOWED_ORIGINS
+    // env var (set by Terraform to the CloudFront domain); defaults to local dev origins.
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
+    private String corsAllowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,6 +49,7 @@ public class SecurityConfiguration {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()  // login/register/etc.
+                        .requestMatchers("/actuator/health").permitAll() // App Runner health check
                         .anyRequest().authenticated()
                 )
 
@@ -58,12 +66,11 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // TODO: set these to your actual SPA origins
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",      // local dev (adjust port)
-                "http://localhost:4200",      // another common Angular port
-                "https://your-spa-domain.com" // S3/CloudFront/custom domain
-        ));
+        // Origins come from CORS_ALLOWED_ORIGINS (env) — never hard-coded.
+        config.setAllowedOrigins(Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList());
 
         // Allowed HTTP methods for your API
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
