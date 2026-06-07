@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS auth;
-
-CREATE TABLE IF NOT EXISTS auth._user (
+-- Objects are created in the schema configured via spring.flyway.default-schema
+-- (`auth`), which the tm_<env>_auth role owns. No hard-coded schema name.
+CREATE TABLE IF NOT EXISTS _user (
     uuid        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_name   TEXT NOT NULL UNIQUE,
     first_name  TEXT,
