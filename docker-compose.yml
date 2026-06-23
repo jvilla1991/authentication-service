@@ -6,8 +6,10 @@ services:
       POSTGRES_USER: table_mimic_user
       POSTGRES_PASSWORD: localpassword
       POSTGRES_HOST_AUTH_METHOD: trust
+    # Host 5434 (the port dev/local profiles expect). 5433 is taken by the
+    # native Postgres on this machine, so binding there would collide.
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - table_mimic_pgdata:/var/lib/postgresql/data
     healthcheck:
