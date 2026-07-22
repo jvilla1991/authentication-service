@@ -4,6 +4,7 @@ import com.moo.authenticationservice.config.JwtAuthenticationFilter;
 import com.moo.authenticationservice.config.SecurityConfiguration;
 import com.moo.authenticationservice.models.AuthenticationResponse;
 import com.moo.authenticationservice.services.AuthenticationService;
+import com.moo.authenticationservice.services.PasswordResetService;
 import com.moo.authenticationservice.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ class AuthenticationControllerTests {
     private UserService userService;
 
     @MockitoBean
+    private PasswordResetService passwordResetService;
+
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockitoBean
@@ -57,6 +61,14 @@ class AuthenticationControllerTests {
         mockMvc.perform(post("/api/v1/auth/authenticate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"test\",\"password\":\"pw\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void resetPassword_isPublic() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"raw-token\",\"newPassword\":\"newpassword1\"}"))
                 .andExpect(status().isOk());
     }
 }
