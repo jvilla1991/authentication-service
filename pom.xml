@@ -78,6 +78,14 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<!-- In-memory DB for tests: the test profile and controller tests
+			     point their datasource at H2 (schema built by ddl-auto=update,
+			     Flyway stays off in tests — migrations are Postgres SQL). -->
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
